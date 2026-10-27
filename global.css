@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* App & Card backgrounds */
+    --color-bg-app: #F8F9FA;
+    --color-bg-card: #FFFFFF;
+    --color-bg-input: #EBF2FE;
+
+    /* Brand / Primary colors */
+    --color-primary: #4645F6;
+    --color-primary-soft: #EEF2FF;
+
+    /* Status indicators */
+    --color-success: #059669;
+    --color-success-bg: #ECFDF5;
+    --color-danger: #E11D48;
+    --color-danger-bg: #FFF1F2;
+    --color-warning: #D97706;
+    --color-warning-bg: #FFFBEB;
+
+    /* Typography */
+    --color-text-main: #111827;
+    --color-text-muted: #6B7280;
+    --color-text-light: #9CA3AF;
+
+    /* Borders */
+    --color-border: #F3F4F6;
+    --color-border-subtle: #E5E7EB;
+  }
+}
+
