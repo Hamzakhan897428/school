@@ -6,6 +6,7 @@ import {
   Feather,
 } from "@expo/vector-icons";
 import { ActionModuleCard, ActionModuleCardProps } from "./ActionModuleCard";
+import { useI18n } from "../i18n";
 
 export type ActionModuleItem = Omit<
   ActionModuleCardProps,
@@ -163,13 +164,16 @@ export const AcademicModulesGrid: React.FC<AcademicModulesGridProps> = ({
   items,
   className = "",
   onItemPress,
-  isUrdu = false,
+  isUrdu,
 }) => {
+  const { locale, isRTL } = useI18n();
+  const effectiveIsUrdu = isUrdu !== undefined ? isUrdu : locale === "ur";
+
   const activeItems =
     items ||
-    (isUrdu ? URDU_ACADEMIC_MODULES_GRID : DEFAULT_ACADEMIC_MODULES_GRID);
+    (effectiveIsUrdu ? URDU_ACADEMIC_MODULES_GRID : DEFAULT_ACADEMIC_MODULES_GRID);
 
-  if (isUrdu) {
+  if (effectiveIsUrdu) {
     return (
       <View className={`w-full ${className}`}>
         {/* Urdu 2-Column Responsive Grid matching Reference Screenshot */}

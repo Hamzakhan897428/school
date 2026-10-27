@@ -20,6 +20,7 @@ export interface CustomInputProps {
   keyboardType?: KeyboardTypeOptions;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   containerClassName?: string;
+  error?: string;
   onFocus?: () => void;
   returnKeyType?: ReturnKeyTypeOptions;
   onSubmitEditing?: () => void;
@@ -43,6 +44,7 @@ export const CustomInput = forwardRef<
       keyboardType = "default",
       autoCapitalize = "none",
       containerClassName = "",
+      error,
       onFocus,
       returnKeyType,
       onSubmitEditing,
@@ -69,7 +71,11 @@ export const CustomInput = forwardRef<
 
         {/* Input Container */}
         <View
-          className={`w-full h-13 px-4 bg-input rounded-2xl items-center ${
+          className={`w-full h-13 px-4 bg-input rounded-2xl items-center border ${
+            error
+              ? "border-red-500 bg-red-50/20"
+              : "border-transparent"
+          } ${
             isRTL ? "flex-row-reverse" : "flex-row"
           }`}
         >
@@ -104,6 +110,17 @@ export const CustomInput = forwardRef<
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Red Inline Error Text */}
+        {error ? (
+          <Text
+            className={`text-[12.5px] font-medium text-red-600 mt-1.5 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
+          >
+            {error}
+          </Text>
+        ) : null}
       </View>
     );
   }

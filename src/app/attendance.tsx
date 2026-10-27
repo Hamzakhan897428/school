@@ -6,6 +6,8 @@ import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
 import { AttendanceResponse } from "../types/api";
+import { ModuleHeader } from "../components/ModuleHeader";
+import { useI18n } from "../i18n";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "leave";
 
@@ -40,6 +42,7 @@ const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
 export default function AttendanceScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   // Default to July 2026 as per reference UI
   const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 6, 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -198,41 +201,31 @@ export default function AttendanceScreen() {
   const selectedDayRecord = selectedDay ? attendanceMap[selectedDay] : null;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Module Header */}
+      <ModuleHeader title={t("attendance.screenTitle")} onBack={handleBack} />
+
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between pt-2 mb-2">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Attendance
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Month Switcher Navigation */}
-        <View className="flex-row items-center justify-between pt-1 pb-4">
+        <View
+          className={`flex-row items-center justify-between pt-1 pb-4 ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
           <TouchableOpacity
-            onPress={handlePrevMonth}
+            onPress={isRTL ? handleNextMonth : handlePrevMonth}
             activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityLabel="Previous Month"
-            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center active:bg-gray-50"
           >
-            <Feather name="chevron-left" size={22} color="#1F2937" />
+            <Feather name={isRTL ? "chevron-right" : "chevron-left"} size={22} color="#1F2937" />
           </TouchableOpacity>
 
           <View className="items-center">
@@ -242,12 +235,13 @@ export default function AttendanceScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={handleNextMonth}
+            onPress={isRTL ? handlePrevMonth : handleNextMonth}
             activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityLabel="Next Month"
-            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center active:bg-gray-50"
           >
-            <Feather name="chevron-right" size={22} color="#1F2937" />
+            <Feather name={isRTL ? "chevron-left" : "chevron-right"} size={22} color="#1F2937" />
           </TouchableOpacity>
         </View>
 
@@ -255,18 +249,18 @@ export default function AttendanceScreen() {
         <View className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm mb-4">
           <Text className="text-center text-[15px] font-medium text-gray-500 mb-4">
             {stats.totalMarked > 0
-              ? `${stats.totalMarked} Days Recorded`
-              : "No attendance marked yet"}
+              ? `${stats.totalMarked} ${t("attendance.markedRecords")}`
+              : t("attendance.noRecord")}
           </Text>
 
-          {/* 4 Stat Boxes in a Row */}
-          <View className="flex-row items-center justify-between">
+          {/* 4 Stat Boxes in a Row with RTL awareness */}
+          <View className={`flex-row items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
             <View className="flex-1 bg-[#F8F9FA] rounded-2xl py-3.5 mx-1 items-center justify-center">
               <Text className="text-[22px] font-extrabold text-gray-900">
                 {stats.present}
               </Text>
               <Text className="text-[12px] font-medium text-gray-400 mt-0.5">
-                Present
+                {t("status.present")}
               </Text>
             </View>
 
@@ -275,7 +269,7 @@ export default function AttendanceScreen() {
                 {stats.absent}
               </Text>
               <Text className="text-[12px] font-medium text-gray-400 mt-0.5">
-                Absent
+                {t("status.absent")}
               </Text>
             </View>
 
@@ -284,7 +278,7 @@ export default function AttendanceScreen() {
                 {stats.late}
               </Text>
               <Text className="text-[12px] font-medium text-gray-400 mt-0.5">
-                Late
+                {t("status.late")}
               </Text>
             </View>
 
@@ -293,7 +287,7 @@ export default function AttendanceScreen() {
                 {stats.leave}
               </Text>
               <Text className="text-[12px] font-medium text-gray-400 mt-0.5">
-                Leave
+                {t("status.leave")}
               </Text>
             </View>
           </View>

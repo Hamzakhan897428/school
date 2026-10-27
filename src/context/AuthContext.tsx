@@ -151,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const res = await api.login({
       identifier,
       password,
-      deviceLabel: "React Native Mobile App",
+      deviceLabel: "+923001601844",
     });
 
     setUser(res.parent);

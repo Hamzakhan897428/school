@@ -5,29 +5,23 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Feather } from "@expo/vector-icons";
 
+import { MainHeader } from "../components/MainHeader";
 import { AcademicModulesGrid } from "../components/AcademicModulesGrid";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
 import { ChildSummary } from "../types/api";
+import { useI18n } from "../i18n";
 
 export default function DashboardScreen() {
-  const { selectedChild, user, logout, setLocale } = useAuth();
-  const [isUrdu, setIsUrdu] = useState<boolean>(user?.locale === "ur");
+  const { selectedChild } = useAuth();
+  const { t, locale, isRTL, toggleLocale } = useI18n();
+  const isUrdu = isRTL;
   const [summary, setSummary] = useState<ChildSummary | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  // Sync locale state with user profile
-  useEffect(() => {
-    if (user?.locale) {
-      setIsUrdu(user.locale === "ur");
-    }
-  }, [user?.locale]);
 
   // Fetch live summary for selected child
   const fetchSummary = useCallback(async () => {
@@ -51,32 +45,7 @@ export default function DashboardScreen() {
   };
 
   const toggleLanguage = () => {
-    const nextUrdu = !isUrdu;
-    setIsUrdu(nextUrdu);
-    setLocale(nextUrdu ? "ur" : "en");
-  };
-
-  const handleSettings = () => {
-    router.push("/settings");
-  };
-
-  const handleSignOut = async () => {
-    Alert.alert(
-      isUrdu ? "سائن آؤٹ" : "Sign Out",
-      isUrdu
-        ? "کیا آپ پورٹل سے سائن آؤٹ کرنا چاہتے ہیں؟"
-        : "Are you sure you want to sign out?",
-      [
-        { text: isUrdu ? "منسوخ کریں" : "Cancel", style: "cancel" },
-        {
-          text: isUrdu ? "سائن آؤٹ" : "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]
-    );
+    toggleLocale();
   };
 
   // Dynamic child info with fallbacks
@@ -129,11 +98,14 @@ export default function DashboardScreen() {
     : "No exam coming up";
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Main Header */}
+      <MainHeader title={childFirstName} />
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 10,
+          paddingTop: 8,
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
@@ -141,86 +113,6 @@ export default function DashboardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top App Bar: Toggles between English & Urdu (RTL) Layout */}
-        {isUrdu ? (
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center">
-              {/* Settings Gear Button on Left in RTL */}
-              <TouchableOpacity
-                onPress={handleSettings}
-                activeOpacity={0.7}
-                accessibilityLabel="Settings"
-                className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center mr-2"
-              >
-                <Feather name="settings" size={18} color="#1F2937" />
-              </TouchableOpacity>
-
-              {/* Language Toggle: English in RTL */}
-              <TouchableOpacity
-                onPress={toggleLanguage}
-                activeOpacity={0.7}
-                className="bg-white border border-gray-100 px-4 py-1.5 rounded-full shadow-xs"
-              >
-                <Text className="text-[13.5px] font-bold text-[#4F46E5]">
-                  English
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Name and Chevron Right on Right in RTL */}
-            <View className="flex-row items-center">
-              <Text className="text-[19px] font-bold text-gray-900 tracking-tight mr-3">
-                {childFirstName}
-              </Text>
-              <TouchableOpacity
-                onPress={handleSignOut}
-                activeOpacity={0.7}
-                accessibilityLabel="Sign out"
-                className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-              >
-                <Feather name="chevron-right" size={20} color="#1F2937" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center">
-              <TouchableOpacity
-                onPress={handleSignOut}
-                activeOpacity={0.7}
-                accessibilityLabel="Sign out"
-                className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center mr-3"
-              >
-                <Feather name="chevron-left" size={20} color="#1F2937" />
-              </TouchableOpacity>
-
-              <Text className="text-[19px] font-bold text-gray-900 tracking-tight">
-                {childFirstName}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center space-x-2">
-              <TouchableOpacity
-                onPress={toggleLanguage}
-                activeOpacity={0.7}
-                className="bg-white border border-gray-100 px-4 py-1.5 rounded-full shadow-xs mr-2"
-              >
-                <Text className="text-[13.5px] font-bold text-[#4F46E5]">
-                  اردو
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleSettings}
-                activeOpacity={0.7}
-                accessibilityLabel="Settings"
-                className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-              >
-                <Feather name="settings" size={18} color="#1F2937" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
 
         {/* Card 1: Student Profile */}
         <View className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm mb-3.5 flex-row items-center">

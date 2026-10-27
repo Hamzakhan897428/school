@@ -11,6 +11,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
+import { StickyHeader } from "../components/StickyHeader";
+import { useI18n } from "../i18n";
 
 export interface SchoolCalendarEvent {
   id: string;
@@ -93,6 +95,7 @@ const CALENDAR_EVENTS_LIST: SchoolCalendarEvent[] = [
 
 export default function CalendarScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   // Default to October 2026 as per reference UI
   const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 9, 1)); // Month index 9 = October
   const [liveEvents, setLiveEvents] = useState<SchoolCalendarEvent[] | null>(null);
@@ -195,41 +198,30 @@ export default function CalendarScreen() {
   const dateLabels = Object.keys(groupedEvents);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Sticky Header */}
+      <StickyHeader title={t("calendar.screenTitle")} onBack={handleBack} />
+
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between pt-2 mb-2">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Calendar
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Month Switcher Navigation */}
-        <View className="flex-row items-center justify-between pt-1 pb-4">
+        <View
+          className={`flex-row items-center justify-between pt-1 pb-4 ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
           <TouchableOpacity
-            onPress={handlePrevMonth}
+            onPress={isRTL ? handleNextMonth : handlePrevMonth}
             activeOpacity={0.7}
             accessibilityLabel="Previous Month"
-            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center active:bg-gray-50"
           >
-            <Feather name="chevron-left" size={22} color="#1F2937" />
+            <Feather name={isRTL ? "chevron-right" : "chevron-left"} size={22} color="#1F2937" />
           </TouchableOpacity>
 
           <View className="items-center">
@@ -239,12 +231,12 @@ export default function CalendarScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={handleNextMonth}
+            onPress={isRTL ? handlePrevMonth : handleNextMonth}
             activeOpacity={0.7}
             accessibilityLabel="Next Month"
-            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center active:bg-gray-50"
           >
-            <Feather name="chevron-right" size={22} color="#1F2937" />
+            <Feather name={isRTL ? "chevron-left" : "chevron-right"} size={22} color="#1F2937" />
           </TouchableOpacity>
         </View>
 
@@ -252,7 +244,7 @@ export default function CalendarScreen() {
         {dateLabels.length === 0 ? (
           <View className="bg-white rounded-3xl py-8 px-6 border border-gray-100 shadow-sm items-center justify-center mt-2">
             <Text className="text-[15.5px] font-semibold text-gray-500 text-center">
-              No events scheduled for this month.
+              {t("calendar.noEventsMonth")}
             </Text>
           </View>
         ) : (
@@ -324,7 +316,7 @@ export default function CalendarScreen() {
           className="mt-4 py-2.5 items-center justify-center"
         >
           <Text className="text-[13px] font-semibold text-gray-400">
-            ← Return to Dashboard
+            {t("timetable.returnToDashboard")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

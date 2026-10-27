@@ -11,6 +11,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
+import { StickyHeader } from "../components/StickyHeader";
+import { useI18n } from "../i18n";
 
 export interface NoticeCardItem {
   id: string;
@@ -51,6 +53,7 @@ const NOTICES_LIST: NoticeCardItem[] = [
 
 export default function NoticesScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   const [notices, setNotices] = useState<NoticeCardItem[]>(NOTICES_LIST);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -113,11 +116,14 @@ export default function NoticesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Sticky Header */}
+      <StickyHeader title={t("notices.screenTitle")} onBack={handleBack} />
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 12,
+          paddingTop: 8,
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
@@ -125,66 +131,65 @@ export default function NoticesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between mb-4">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Notices
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Notices Cards List */}
-        <View>
-          {notices.map((notice) => (
-            <View
-              key={notice.id}
-              className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm mb-3.5"
-            >
-              {/* Top Row: Badge (optional) & Date */}
-              <View className="flex-row items-center">
-                {notice.badge ? (
-                  <View className="bg-[#FFEDD5] px-2.5 py-0.5 rounded-full mr-2">
-                    <Text className="text-[11.5px] font-bold text-[#EA580C]">
-                      {notice.badge}
-                    </Text>
-                  </View>
-                ) : null}
+        {notices.length === 0 ? (
+          <View className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm items-center justify-center my-4">
+            <Ionicons name="notifications-off-outline" size={36} color="#9CA3AF" />
+            <Text className="text-[14px] text-gray-500 font-medium mt-3 text-center">
+              {t("notices.noNotices")}
+            </Text>
+          </View>
+        ) : (
+          <View>
+            {notices.map((notice) => (
+              <View
+                key={notice.id}
+                className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm mb-3.5"
+              >
+                {/* Top Row: Badge (optional) & Date */}
+                <View
+                  className={`flex-row items-center ${
+                    notice.isRTL ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  {notice.badge ? (
+                    <View
+                      className={`bg-[#FFEDD5] px-2.5 py-0.5 rounded-full ${
+                        notice.isRTL ? "ml-2" : "mr-2"
+                      }`}
+                    >
+                      <Text className="text-[11.5px] font-bold text-[#EA580C]">
+                        {notice.badge === "Important" ? t("notices.urgentBadge") : notice.badge}
+                      </Text>
+                    </View>
+                  ) : null}
 
-                <Text className="text-[12.5px] text-gray-400 font-medium">
-                  {notice.date}
+                  <Text className="text-[12.5px] text-gray-400 font-medium">
+                    {notice.date}
+                  </Text>
+                </View>
+
+                {/* Title */}
+                <Text
+                  className={`text-[16px] font-bold text-gray-900 mt-2 ${
+                    notice.isRTL ? "text-right" : "text-left"
+                  }`}
+                >
+                  {notice.title}
+                </Text>
+
+                {/* Description Body */}
+                <Text
+                  className={`text-[13.5px] text-gray-600 leading-relaxed mt-1.5 ${
+                    notice.isRTL ? "text-right text-[14.5px]" : "text-left"
+                  }`}
+                >
+                  {notice.description}
                 </Text>
               </View>
-
-              {/* Title */}
-              <Text
-                className={`text-[16px] font-bold text-gray-900 mt-2 ${
-                  notice.isRTL ? "text-right" : "text-left"
-                }`}
-              >
-                {notice.title}
-              </Text>
-
-              {/* Description Body */}
-              <Text
-                className={`text-[13.5px] text-gray-600 leading-relaxed mt-1.5 ${
-                  notice.isRTL ? "text-right text-[14.5px]" : "text-left"
-                }`}
-              >
-                {notice.description}
-              </Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
 
         {/* Return to Dashboard */}
         <TouchableOpacity
@@ -193,7 +198,7 @@ export default function NoticesScreen() {
           className="mt-3 py-2.5 items-center justify-center"
         >
           <Text className="text-[13px] font-semibold text-gray-400">
-            ← Return to Dashboard
+            {t("timetable.returnToDashboard")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

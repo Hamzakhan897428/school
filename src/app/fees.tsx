@@ -13,6 +13,8 @@ import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
 import { downloadAndOpenPdf } from "../api/pdf";
+import { StickyHeader } from "../components/StickyHeader";
+import { useI18n } from "../i18n";
 
 export interface FeeBill {
   id: string;
@@ -60,6 +62,7 @@ const FEE_BILLS: FeeBill[] = [
 
 export default function FeesScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   const [bills, setBills] = useState<FeeBill[]>(FEE_BILLS);
   const [totalDue, setTotalDue] = useState<number>(22500);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -145,11 +148,14 @@ export default function FeesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Sticky Header */}
+      <StickyHeader title={t("fees.screenTitle")} onBack={handleBack} />
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 12,
+          paddingTop: 10,
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
@@ -157,28 +163,10 @@ export default function FeesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between mb-4">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Fees
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Top Card: Total to pay */}
         <View className="bg-white rounded-3xl py-6 px-6 border border-gray-100 shadow-sm items-center justify-center mb-6">
           <Text className="text-[14px] text-gray-500 font-medium text-center mb-1">
-            Total to pay
+            {t("fees.totalToPay")}
           </Text>
           <Text className="text-[36px] font-extrabold text-[#DC2626] text-center tracking-tight">
             Rs. {totalDue.toLocaleString()}
@@ -186,8 +174,12 @@ export default function FeesScreen() {
         </View>
 
         {/* Section Heading: Fee bills */}
-        <Text className="text-[17px] font-bold text-gray-900 mb-3 px-1">
-          Fee bills
+        <Text
+          className={`text-[17px] font-bold text-gray-900 mb-3 px-1 ${
+            isRTL ? "text-right" : "text-left"
+          }`}
+        >
+          {t("fees.feeBills")}
         </Text>
 
         {/* List of Fee Bill Cards */}

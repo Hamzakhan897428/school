@@ -3,10 +3,12 @@ import * as SecureStore from "expo-secure-store";
 
 const TOKEN_KEY = "wellrun_parent_token";
 const CHILD_ID_KEY = "wellrun_selected_child_id";
+const LOCALE_KEY = "wellrun_app_locale";
 
 // In-memory fallback if storage is unavailable
 let memoryToken: string | null = null;
 let memoryChildId: string | null = null;
+let memoryLocale: string = "en";
 
 export const storage = {
   async getToken(): Promise<string | null> {
@@ -79,6 +81,37 @@ export const storage = {
       }
     } catch {
       memoryChildId = childId;
+    }
+  },
+
+  async getLocale(): Promise<"en" | "ur"> {
+    try {
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined" && window.localStorage) {
+          const val = window.localStorage.getItem(LOCALE_KEY);
+          return val === "ur" ? "ur" : "en";
+        }
+        return memoryLocale === "ur" ? "ur" : "en";
+      }
+      const val = await SecureStore.getItemAsync(LOCALE_KEY);
+      return val === "ur" ? "ur" : "en";
+    } catch {
+      return memoryLocale === "ur" ? "ur" : "en";
+    }
+  },
+
+  async setLocale(locale: "en" | "ur"): Promise<void> {
+    try {
+      memoryLocale = locale;
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.setItem(LOCALE_KEY, locale);
+        }
+      } else {
+        await SecureStore.setItemAsync(LOCALE_KEY, locale);
+      }
+    } catch {
+      memoryLocale = locale;
     }
   },
 

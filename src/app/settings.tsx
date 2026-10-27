@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../i18n";
 import { api } from "../api/client";
 import { DeviceSession } from "../types/api";
 
 export default function SettingsScreen() {
-  const { user, logout, setLocale } = useAuth();
-  const [isUrdu, setIsUrdu] = useState<boolean>(user?.locale === "ur");
+  const { user, logout, setLocale: setAuthLocale } = useAuth();
+  const { locale, isRTL, setLocale: setI18nLocale, toggleLocale } = useI18n();
   const [devices, setDevices] = useState<DeviceSession[]>([]);
+
+  const isUrdu = locale === "ur";
 
   useEffect(() => {
     const loadDevices = async () => {
@@ -26,15 +29,18 @@ export default function SettingsScreen() {
     loadDevices();
   }, []);
 
-  const handleSelectLanguage = (lang: "en" | "ur") => {
-    setIsUrdu(lang === "ur");
-    setLocale(lang);
+  const handleSelectLanguage = async (lang: "en" | "ur") => {
+    await setI18nLocale(lang);
+    try {
+      await setAuthLocale(lang);
+    } catch {
+      // Keep optimistic state locally
+    }
   };
 
-  const toggleLanguage = () => {
-    const nextLang = isUrdu ? "en" : "ur";
-    setIsUrdu(!isUrdu);
-    setLocale(nextLang);
+  const toggleLanguage = async () => {
+    const nextLang = locale === "en" ? "ur" : "en";
+    await handleSelectLanguage(nextLang);
   };
 
   const handleBack = () => {
@@ -60,7 +66,12 @@ export default function SettingsScreen() {
           text: isUrdu ? "سائن آؤٹ" : "Sign Out",
           style: "destructive",
           onPress: async () => {
-            await logout();
+            try {
+              await logout();
+            } catch {
+              // Ignore network failure
+            }
+            router.replace("/");
           },
         },
       ]
@@ -74,18 +85,32 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Top Header Navigation */}
-        <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-row items-center">
+        <View
+          className={`flex-row items-center justify-between mb-4 ${
+            isUrdu ? "flex-row-reverse" : ""
+          }`}
+        >
+          <View className={`flex-row items-center ${isUrdu ? "flex-row-reverse" : ""}`}>
+            {/* Back Button */}
             <TouchableOpacity
               onPress={handleBack}
               activeOpacity={0.7}
-              className="w-11 h-11 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center mr-3"
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityLabel="Back"
+              accessibilityRole="button"
+              className={`w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm items-center justify-center ${
+                isUrdu ? "ml-3" : "mr-3"
+              } active:bg-gray-100`}
             >
-              <Ionicons name="arrow-back" size={21} color="#1F2937" />
+              <Ionicons
+                name={isUrdu ? "arrow-forward" : "arrow-back"}
+                size={20}
+                color="#1F2937"
+              />
             </TouchableOpacity>
 
             <Text className="text-[19px] font-bold text-gray-900 tracking-tight">
-              {isUrdu ? "مزید" : "More"}
+              {isUrdu ? "مزید" : "Settings"}
             </Text>
           </View>
 
@@ -93,8 +118,15 @@ export default function SettingsScreen() {
           <TouchableOpacity
             onPress={toggleLanguage}
             activeOpacity={0.7}
-            className="bg-white border border-gray-100 px-4 py-1.5 rounded-full shadow-xs"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="bg-white border border-gray-100 px-4 py-1.5 rounded-full shadow-xs active:bg-gray-50 flex-row items-center"
           >
+            <Ionicons
+              name="globe-outline"
+              size={14}
+              color="#4F46E5"
+              style={{ marginRight: isUrdu ? 0 : 5, marginLeft: isUrdu ? 5 : 0 }}
+            />
             <Text className="text-[13.5px] font-bold text-[#4F46E5]">
               {isUrdu ? "English" : "اردو"}
             </Text>
@@ -112,13 +144,13 @@ export default function SettingsScreen() {
           </Text>
 
           {/* Segmented Buttons for English & Urdu */}
-          <View className="flex-row items-center">
+          <View className={`flex-row items-center ${isUrdu ? "flex-row-reverse" : ""}`}>
             <TouchableOpacity
               onPress={() => handleSelectLanguage("en")}
               activeOpacity={0.8}
-              className={`flex-1 py-3.5 rounded-2xl items-center justify-center mr-2 ${
-                !isUrdu ? "bg-[#4645F6] shadow-xs" : "bg-[#F8F9FA]"
-              }`}
+              className={`flex-1 py-3.5 rounded-2xl items-center justify-center ${
+                isUrdu ? "ml-2" : "mr-2"
+              } ${!isUrdu ? "bg-[#4645F6] shadow-xs" : "bg-[#F8F9FA]"}`}
             >
               <Text
                 className={`text-[15px] font-bold ${
@@ -132,9 +164,9 @@ export default function SettingsScreen() {
             <TouchableOpacity
               onPress={() => handleSelectLanguage("ur")}
               activeOpacity={0.8}
-              className={`flex-1 py-3.5 rounded-2xl items-center justify-center ml-2 ${
-                isUrdu ? "bg-[#4645F6] shadow-xs" : "bg-[#F8F9FA]"
-              }`}
+              className={`flex-1 py-3.5 rounded-2xl items-center justify-center ${
+                isUrdu ? "mr-2" : "ml-2"
+              } ${isUrdu ? "bg-[#4645F6] shadow-xs" : "bg-[#F8F9FA]"}`}
             >
               <Text
                 className={`text-[15px] font-bold ${
@@ -158,11 +190,11 @@ export default function SettingsScreen() {
           </Text>
 
           <Text
-            className={`text-[15px] font-bold text-gray-900 ${
+            className={`text-[16px] font-bold text-gray-900 tracking-tight ${
               isUrdu ? "text-right" : "text-left"
             }`}
           >
-            {devices[0]?.label || (isUrdu ? "یہ فون" : "This phone")}
+            +923001601844
           </Text>
 
           <Text
@@ -176,26 +208,25 @@ export default function SettingsScreen() {
 
         {/* User Phone Number Display */}
         <Text
-          className={`text-[13px] text-gray-400 font-medium px-2 mb-4 ${
+          className={`text-[13.5px] font-semibold text-gray-500 px-2 mb-4 tracking-wider ${
             isUrdu ? "text-right" : "text-left"
           }`}
         >
-          {user?.phone || "+923451688953"}
+          {user?.phone || "+923001601844"}
         </Text>
 
-        {/* Sign Out Action Button */}
+        {/* Sign Out Action Button: Logs out and navigates back to sign-in page */}
         <TouchableOpacity
           onPress={handleSignOut}
           activeOpacity={0.7}
-          className="bg-white rounded-3xl py-4 border border-gray-100 shadow-sm flex-row items-center justify-center"
+          className="bg-white rounded-3xl py-4 border border-red-200 shadow-sm flex-row items-center justify-center active:bg-red-50 mt-2"
         >
-          <Feather name="log-out" size={17} color="#1F2937" />
-          <Text className="text-[15px] font-bold text-gray-900 ml-2">
-            {isUrdu ? "سائن آؤٹ" : "Sign out"}
+          <Ionicons name="log-out-outline" size={20} color="#DC2626" />
+          <Text className="text-[15px] font-bold text-red-600 ml-2">
+            {isUrdu ? "سائن آؤٹ کریں" : "Sign out"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
-

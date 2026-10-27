@@ -11,6 +11,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
+import { StickyHeader } from "../components/StickyHeader";
+import { useI18n } from "../i18n";
 
 export type WeekDay = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat";
 
@@ -269,6 +271,7 @@ const TIMETABLE_DATA: Record<WeekDay, PeriodSlot[]> = {
 
 export default function TimetableScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   const [selectedDay, setSelectedDay] = useState<WeekDay>("Mon");
   const [liveTimetable, setLiveTimetable] = useState<Record<
     WeekDay,
@@ -374,11 +377,14 @@ export default function TimetableScreen() {
     : TIMETABLE_DATA[selectedDay] || [];
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Sticky Header */}
+      <StickyHeader title={t("timetable.screenTitle")} onBack={handleBack} />
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 12,
+          paddingTop: 8,
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
@@ -386,28 +392,15 @@ export default function TimetableScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between mb-4">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Timetable
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Day Selector Pills */}
-        <View className="flex-row items-center justify-between mb-5">
+        <View
+          className={`flex-row items-center justify-between mb-5 ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
           {WEEK_DAYS.map((day) => {
             const isActive = selectedDay === day;
+            const dayLabel = t(`timetable.days.${day}` as any) || day;
             return (
               <TouchableOpacity
                 key={day}
@@ -424,7 +417,7 @@ export default function TimetableScreen() {
                     isActive ? "text-white" : "text-gray-800"
                   }`}
                 >
-                  {day}
+                  {dayLabel}
                 </Text>
               </TouchableOpacity>
             );
@@ -436,10 +429,10 @@ export default function TimetableScreen() {
           {currentSlots.length === 0 ? (
             <View className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm items-center justify-center my-6">
               <Text className="text-[16px] font-bold text-gray-800">
-                No classes scheduled
+                {t("timetable.noClasses")}
               </Text>
               <Text className="text-[13px] text-gray-400 mt-1">
-                Enjoy your off day!
+                {t("timetable.enjoyOffDay")}
               </Text>
             </View>
           ) : (
@@ -499,7 +492,7 @@ export default function TimetableScreen() {
           className="mt-3 py-2.5 items-center justify-center"
         >
           <Text className="text-[13px] font-semibold text-gray-400">
-            ← Return to Dashboard
+            {t("timetable.returnToDashboard")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

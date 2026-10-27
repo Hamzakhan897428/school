@@ -11,6 +11,8 @@ import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
+import { StickyHeader } from "../components/StickyHeader";
+import { useI18n } from "../i18n";
 
 export interface HomeworkItem {
   id: string;
@@ -88,6 +90,7 @@ const MONTHS_FULL = [
 
 export default function HomeworkScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   // Default to Friday 23 October 2026 as per reference UI
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 9, 23));
   const [liveHomework, setLiveHomework] = useState<HomeworkItem[] | null>(null);
@@ -171,41 +174,31 @@ export default function HomeworkScreen() {
       : MOCK_HOMEWORK.filter((item) => item.dateKey === formattedDateKey);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Sticky Header */}
+      <StickyHeader title={t("homework.screenTitle")} onBack={handleBack} />
+
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between pt-2 mb-2">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Homework
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Day Navigation */}
-        <View className="flex-row items-center justify-between pt-1 pb-4">
+        <View
+          className={`flex-row items-center justify-between pt-1 pb-4 ${
+            isRTL ? "flex-row-reverse" : ""
+          }`}
+        >
           <TouchableOpacity
-            onPress={handlePrevDay}
+            onPress={isRTL ? handleNextDay : handlePrevDay}
             activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityLabel="Previous Day"
-            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center active:bg-gray-50"
           >
-            <Feather name="chevron-left" size={22} color="#1F2937" />
+            <Feather name={isRTL ? "chevron-right" : "chevron-left"} size={22} color="#1F2937" />
           </TouchableOpacity>
 
           <View className="items-center">
@@ -220,12 +213,13 @@ export default function HomeworkScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={handleNextDay}
+            onPress={isRTL ? handlePrevDay : handleNextDay}
             activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityLabel="Next Day"
-            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
+            className="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center active:bg-gray-50"
           >
-            <Feather name="chevron-right" size={22} color="#1F2937" />
+            <Feather name={isRTL ? "chevron-left" : "chevron-right"} size={22} color="#1F2937" />
           </TouchableOpacity>
         </View>
 
@@ -234,7 +228,7 @@ export default function HomeworkScreen() {
           /* Empty State Matching Reference UI Exactly */
           <View className="bg-white rounded-3xl py-6 px-6 border border-gray-100 shadow-sm items-center justify-center mt-1">
             <Text className="text-[15.5px] font-semibold text-gray-900 text-center">
-              Nothing was set for this day.
+              {t("homework.nothingSetForDay")}
             </Text>
           </View>
         ) : (

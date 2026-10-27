@@ -13,6 +13,8 @@ import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
 import { downloadAndOpenPdf } from "../api/pdf";
+import { StickyHeader } from "../components/StickyHeader";
+import { useI18n } from "../i18n";
 
 interface SubjectScore {
   name: string;
@@ -85,6 +87,7 @@ const EXAM_REPORTS: TermReport[] = [
 
 export default function ResultsScreen() {
   const { selectedChild, isAuthenticated } = useAuth();
+  const { t, isRTL } = useI18n();
   const [reports, setReports] = useState<TermReport[]>(EXAM_REPORTS);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>(
     {}
@@ -180,11 +183,14 @@ export default function ResultsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F9FA]">
+    <SafeAreaView className="flex-1 bg-[#F8F9FA]" edges={["bottom", "left", "right"]}>
+      {/* Pinned Sticky Header */}
+      <StickyHeader title={t("results.screenTitle")} onBack={handleBack} />
+
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 12,
+          paddingTop: 8,
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
@@ -192,24 +198,6 @@ export default function ResultsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Top Header Navigation with Backstack Icon */}
-        <View className="flex-row items-center justify-between mb-4">
-          <TouchableOpacity
-            onPress={handleBack}
-            activeOpacity={0.7}
-            accessibilityLabel="Back"
-            className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm items-center justify-center"
-          >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
-          </TouchableOpacity>
-
-          <Text className="text-[17px] font-bold text-gray-900 tracking-tight">
-            Results
-          </Text>
-
-          <View className="w-10" />
-        </View>
-
         {/* Results Cards List */}
         <View>
           {reports.map((report) => {
@@ -242,10 +230,22 @@ export default function ResultsScreen() {
                       </Text>
                     </View>
 
-                    {/* Passed Pill */}
-                    <View className="bg-[#D1FAE5] px-2.5 py-1 rounded-full">
-                      <Text className="text-[11.5px] font-bold text-[#059669]">
-                        {report.status}
+                    {/* Passed / Failed Pill */}
+                    <View
+                      className={`px-2.5 py-1 rounded-full ${
+                        report.status === "Passed" ? "bg-[#D1FAE5]" : "bg-red-100"
+                      }`}
+                    >
+                      <Text
+                        className={`text-[11.5px] font-bold ${
+                          report.status === "Passed"
+                            ? "text-[#059669]"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {report.status === "Passed"
+                          ? t("status.passed")
+                          : t("status.failed")}
                       </Text>
                     </View>
                   </View>
@@ -309,13 +309,17 @@ export default function ResultsScreen() {
 
                 {/* Teacher's Note */}
                 <Text className="text-[12.5px] text-gray-600 leading-relaxed mb-1">
-                  <Text className="font-bold text-gray-800">Teacher's note:</Text>{" "}
+                  <Text className="font-bold text-gray-800">
+                    {t("results.teacherRemark")}:
+                  </Text>{" "}
                   {report.teacherNote}
                 </Text>
 
                 {/* Principal's Note */}
                 <Text className="text-[12.5px] text-gray-600 leading-relaxed mb-4">
-                  <Text className="font-bold text-gray-800">Principal's note:</Text>{" "}
+                  <Text className="font-bold text-gray-800">
+                    {t("results.principalRemark")}:
+                  </Text>{" "}
                   {report.principalNote}
                 </Text>
 
@@ -331,7 +335,7 @@ export default function ResultsScreen() {
                     color="#1F2937"
                   />
                   <Text className="text-[14px] font-bold text-gray-800 ml-2">
-                    Open report card
+                    {t("results.openReportCard")}
                   </Text>
                 </TouchableOpacity>
               </View>
